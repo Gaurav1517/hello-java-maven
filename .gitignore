@@ -1,0 +1,32 @@
+# Ignore target directory (compiled classes, JARs, etc.)
+target/
+target
+
+# Ignore Maven logs
+mvnw.log
+
+# Ignore IntelliJ IDEA project files
+.idea/
+*.iml
+
+# Ignore Eclipse project files
+.project
+.classpath
+.settings/
+
+# Ignore VS Code settings
+.vscode/
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# Ignore logs and temporary files
+*.log
+*.tmp
+
+# Ignore compiled class files
+*.class
+
+# Ignore generated JARs (optional if you build locally)
+*.jar
