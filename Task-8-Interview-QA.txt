@@ -1,92 +1,59 @@
 1. What is Jenkins?
-Jenkins is an open-source automation tool used to build, test, and deploy code. It helps developers automate the software development process — especially Continuous Integration (CI) and Continuous Deployment (CD).
 
-✅ Example:
-If you push new code to GitHub, Jenkins can automatically pull the code, build it using Maven, test it, and deploy it to a server — all without manual work.
+Jenkins is an open-source automation server used to implement 
+Continuous Integration and Continuous Delivery (CI/CD). 
+It automates tasks like building, testing, and deploying 
+code, and integrates with tools like Git, Maven, Docker, and more.
+
 
 2. How do you create a Jenkins job?
-To create a job in Jenkins:
-
-Go to Jenkins Dashboard → New Item
-Enter a job name (e.g., MyApp-Build)
-Choose a type (usually Freestyle project)
-Click OK
-Configure build steps (like Git checkout, Maven build)
-Click Save
-Run it using Build Now
-
-✅ Example:
-You can create a job that runs mvn clean package every time new code is pushed.
+We create a job by:
+    Clicking “New Item” in Jenkins.
+    Entering a job name.
+    Choosing a job type (e.g., Freestyle Project or Pipeline).
+    Configuring the source code repository, build steps, and post-build actions.
+    Saving and triggering the job manually or automatically via webhooks or polling.
 
 3. What is Maven used for?
-Maven is a build tool for Java projects. It helps in:
-Compiling code
-Managing dependencies (libraries)
-Running tests
-Packaging the app (like .jar or .war files)
-
-✅ Example:
-In a Java app, instead of downloading libraries manually, Maven uses the pom.xml file to handle them for you.
+Maven is a build automation tool primarily for Java projects.
+ It:
+    Compiles source code.
+    Runs tests.
+    Packages applications (e.g., into .jar or .war files).
+    Manages project dependencies using pom.xml.
 
 4. How does Jenkins use build tools like Maven?
-Jenkins can run Maven commands as part of a build job.
-You configure the Maven version in Jenkins
-In a job, you tell Jenkins to run Maven goals like clean install or package
-Jenkins uses those commands to build your project
 
-✅ Example:
-Inside Jenkins job → add build step:
-Invoke top-level Maven targets → Goals: clean package
+Jenkins uses Maven in build steps to automate compiling 
+and packaging code. For example, in a freestyle job, you can:
+    mvn clean package
+
+Or configure Maven via Global Tool Configuration, then select 
+it in the job settings. Jenkins then uses Maven to perform 
+tasks like building, testing, and packaging your project.
 
 5. What is the difference between compile and package in Maven?
-compile: Only compiles the Java source code.
+mvn compile: Compiles the source code (Java files → .class files).
+mvn package: Compiles the code and packages it into a distributable format like a .jar or .war.
 
-package: Compiles the code and creates a .jar or .war file.
-
-✅ Example:
-If you run:
-mvn compile
-→ You only get .class files.
-
-If you run:
-mvn package
-→ You get target/hello-1.0.jar
+So, package includes everything compile does, plus creates the 
+final artifact.
 
 6. Where do you configure tools in Jenkins?
-Go to:
-Manage Jenkins → Global Tool Configuration
-There you can configure:
-JDK (Java)
-Maven
-Git
-Gradle, etc.
+Tools like JDK, Maven, Git, and Gradle are configured in:
+Jenkins → Manage Jenkins → Global Tool Configuration
 
-✅ Example:
-You can add Maven 3.9.9 and name it maven, then use it in your Jenkins jobs.
+We can:
+    Define installations (with automatic downloads or local paths).
+    Reference them in jobs by name.
 
 7. How do you debug a failed Jenkins build?
-Steps:
-
-Open the failed job
-Click Console Output
-
-Read error messages
-
-Identify:
-Missing files?
-Permission issues?
-Maven errors?
-
-✅ Example Errors:
-
-BUILD FAILURE: Something went wrong during build.
-Could not resolve dependencies: Library not found.
-Permission denied: Jenkins can't access files.
-
-👉 You may need to:
-
-Fix code
-Change file permissions
-Add missing dependencies in pom.xml
-Re-run the job
-
+To debug a failed Jenkins build:
+    Check console output for errors (Build > Console Output).
+    Look for:
+        Compilation/test errors.
+        Missing tools or dependencies.
+        Incorrect environment variables (like JAVA_HOME, PATH, etc.).
+        Use set -x in shell scripts to trace commands.
+        Run the same build manually on the server to reproduce the issue.
+        Use Jenkins logs (/var/log/jenkins/jenkins.log) for deeper issues.

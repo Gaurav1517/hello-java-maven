@@ -1,13 +1,40 @@
 
 # Task 8: Run a Simple Java Maven Build Job in Jenkins
 
-## 🧠 Objective
+##  Objective
 
 Automate the build process for a simple Java application using Maven and Jenkins (Freestyle Job). Learn Continuous Integration fundamentals.
 
 ---
+## Tool used
+* Linux
+* Java
+* Jenkins
+* Maven
+* Git
+* Github
 
-## 📦 Project Structure
+<a href="https://www.linux.org/" target="_blank" rel="noreferrer"> 
+    <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/linux/linux-original.svg" alt="linux" width="60" height="60"/> 
+</a>
+<a href="https://www.oracle.com/java/technologies/downloads/" target="_blank" rel="noreferrer">
+    <img src="https://www.svgrepo.com/show/452234/java.svg" alt="Java" width="60" height="60"/> 
+</a>
+<a href="https://www.jenkins.io" target="_blank" rel="noreferrer">
+    <img src="https://www.vectorlogo.zone/logos/jenkins/jenkins-icon.svg" alt="jenkins" width="60" height="60"/> 
+</a>
+<a href="https://maven.apache.org">
+  <img src="https://www.svgrepo.com/show/354051/maven.svg" alt="Maven" width="60" height="60">
+</a>
+<a href="https://git-scm.com">
+  <img src="https://www.svgrepo.com/show/452210/git.svg" alt="Git" width="60" height="60">
+</a>
+<a href="https://github.com">
+  <img src="https://www.svgrepo.com/show/475654/github-color.svg" alt="GitHub" width="60" height="60">
+</a>
+
+
+##  Project Structure
 
 ```
 
@@ -22,7 +49,7 @@ hello-java-maven/
 
 ---
 
-## 🔧 Source Code
+##  Source Code
 
 ### `HelloWorld.java`
 
@@ -81,347 +108,161 @@ public class HelloWorld {
 
                                                             
 ```
-
----
-
-## 🚀 Jenkins Setup on RHEL/CentOS
-
-### 1. ✅ Install Jenkins
+### Push to GitHub
 
 ```bash
-sudo yum install -y fontconfig java-21-openjdk wget
-java --version
-
-sudo wget -O /etc/yum.repos.d/jenkins.repo \
-    https://pkg.jenkins.io/redhat-stable/jenkins.repo
-
-sudo rpm --import https://pkg.jenkins.io/redhat-stable/jenkins.io-2023.key
-sudo yum upgrade
-sudo yum install -y jenkins
-
-sudo systemctl daemon-reload
-sudo systemctl enable jenkins
-sudo systemctl start jenkins
-sudo systemctl status jenkins
+git init
+git add .
+git commit -m "add source code"
+git branch -M main
+git remote add origin https://github.com/Gaurav1517/hello-java-maven.git
+git push -u origin main
 ```
 
-### 2. 🔒 Grant Docker Access (Optional)
+---
+
+## 1. Launch AWS EC2 Instance
+
+- **Instance Name**: jenkins  
+- **OS**: Ubuntu Linux  
+- **Instance Type**: t2.micro  
+- **Key Pair**: jenkins.pem  
+- **Security Group Ports**: 22, 80, 443, 8080  
+- **VPC**: Default  
+- **User Data Script**: (used for automatic Jenkins installation)
+
+### EC2 User Data Script
 
 ```bash
-sudo usermod -aG docker jenkins
-newgrp docker
-```
+#!/bin/bash
+set -e
+
+# Install Java
+apt-get update -y
+apt-get install openjdk-17-jdk git -y
+
+# Install Jenkins
+curl -fsSL https://pkg.jenkins.io/debian-stable/jenkins.io-2023.key | tee /usr/share/keyrings/jenkins-keyring.asc > /dev/null
+echo "deb [signed-by=/usr/share/keyrings/jenkins-keyring.asc] https://pkg.jenkins.io/debian-stable binary/" | tee /etc/apt/sources.list.d/jenkins.list > /dev/null
+apt-get update -y
+apt-get install jenkins -y
+systemctl enable jenkins
+systemctl start jenkins
+
+# Configure swap memory
+if swapon --show | grep -q '/swapfile'; then
+    echo "Swap file already exists."
+else
+    fallocate -l 4G /swapfile
+    chmod 600 /swapfile
+    mkswap /swapfile
+    swapon /swapfile
+    echo '/swapfile none swap sw 0 0' | tee -a /etc/fstab
+fi
+
+# Output Jenkins initial password
+cat /var/lib/jenkins/secrets/initialAdminPassword
+````
 
 ---
 
-## ⚙️ Maven & Java Configuration in Jenkins
-
-### 🔧 Maven Setup in Jenkins UI:
-
-1. Go to: `Manage Jenkins` → `Global Tool Configuration`
-2. Under **Maven**:
-
-   * Add Maven
-   * Name: `maven`
-   * Version: `3.9.9` *(can also use stable 3.8.6 if needed)*
-
-### ☕ Java Version:
-
-Java 21 is already installed:
+## 2. SSH into EC2 Instance
 
 ```bash
-java --version
-openjdk 21.0.7 2025-04-15 LTS
+ssh -i jenkins.pem ubuntu@<EC2-PUBLIC-IP>
 ```
 
 ---
 
-## 💻 Copy Source Code from Windows to Jenkins Server
+## 3. Access Jenkins in Browser
 
-### 1. From Windows (CMD):
+Open in browser:
 
-```cmd
-scp -r hello-java-maven root@192.168.70.135:/tmp/
+```
+http://<EC2-PUBLIC-IP>:8080
 ```
 
-### 2. On Jenkins Server:
+* Enter the initial admin password from:
+
+  ```bash
+  sudo cat /var/lib/jenkins/secrets/initialAdminPassword
+  ```
+
+* Install **Suggested Plugins**
+
+* Create **admin user** with username, password, name, and email
+
+---
+
+## 4. Install Java & Maven (Manual Setup)
+
+Run this script after SSH into the server:
 
 ```bash
-mkdir -p /var/lib/jenkins/workspace/task-8
-cp -r /tmp/hello-java-maven/* /var/lib/jenkins/workspace/task-8/
-sudo chown -R jenkins:jenkins /var/lib/jenkins/workspace/task-8
-```
+#!/bin/bash
 
+# Install Java (OpenJDK 17)
+apt update
+apt install -y openjdk-17-jdk
+
+# Download and install Maven
+wget -q https://dlcdn.apache.org/maven/maven-3/3.9.11/binaries/apache-maven-3.9.11-bin.tar.gz
+tar -xzf apache-maven-3.9.11-bin.tar.gz
+mv apache-maven-3.9.11 /usr/local/maven
+ln -sf /usr/local/maven/bin/mvn /usr/local/bin/mvn
+
+# Verify installations
+java -version
+mvn -version
+```
 ---
 
-## 🛠 Create Jenkins Job (Freestyle)
+## 5. Create Jenkins Freestyle Project
 
-1. Go to Jenkins UI → New Item → Name: `task-8` → Type: **Freestyle project**
-2. In **Build** section:
+* **Dashboard → New Item → Freestyle Project**
+* **Project name**: hello-java-maven
+* **Description**: Build and run Maven project
+* **GitHub project**: `https://github.com/Gaurav1517/hello-java-maven`
 
-   * Add build step: `Invoke top-level Maven targets`
-   * Maven Version: `maven`
-   * Goals: `clean package`
+### Source Code Management
 
----
+* Choose **Git**
+* Repository URL: `https://github.com/Gaurav1517/hello-java-maven.git`
+* Branch: `*/main`
 
-## ✅ Run & Verify
+### Build Step
 
-Click **Build Now**
-Then go to **Console Output** and look for:
+* Add **Execute Shell**
+* Paste the following script:
 
-```
-[INFO] BUILD SUCCESS
-```
-
----
-
-## ✅ Running the JAR Artifact
-
-After successful build, run:
+```bash
+echo "Build with Maven"
 mvn clean package
-java -jar target/hello-1.0.jar
 
-Expected output:
+echo "Run the JAR"
+java -jar target/hello-1.0.jar
 ```
-Hello, Jenkins + Maven!
-```
+
+### Save and Build
+
+* Click **Save**
+* Then click **Build Now**
+* Open **Console Output** to verify the result
 
 ---
 
-## 📸 Deliverable
+## 6. Deliverable
 
 * Screenshot of the Jenkins console output with `BUILD SUCCESS`
-![build-success](/snap/build-success.png)
-![jenkins-dir](/snap/jenkins-dir.png)
----
-
-## 🎯 What You Learned
-
-* Jenkins + Maven setup on RHEL
-* Creating and compiling a Java app with Maven
-* Running Jenkins builds manually
-* Troubleshooting Maven and permission issues
+- **build-snap** ![build-success](/snap/build-success.png)
+- **tools-verify installtation & jenkins workspace** ![tools-verify-and-jenkins-workspace](/snap/tools-verify-and-jenkins-workspace.png)
 
 ---
 
-## 🔗 References
+## 7. References
 
-* Jenkins Install Docs: [https://www.jenkins.io/doc/book/installing/linux/#red-hat-centos](https://www.jenkins.io/doc/book/installing/linux/#red-hat-centos)
-
----
-
-
-=======================================
-Absolutely! Here's how you can configure a **Jenkins Freestyle Job** to build your **Java Maven "Hello World" project**.
+* Java [java download link](https://www.oracle.com/java/technologies/downloads/)
+* Jenkins Install Docs: [jenkins insallation](https://www.jenkins.io/doc/book/installing/linux/)
+* Maven: [maven download link](https://maven.apache.org/download.cgi)
 
 ---
-
-## ✅ Goal:
-
-Set up a **Jenkins Freestyle project** to:
-
-1. Pull or use your Maven project (with your current `pom.xml` and source files).
-2. Run `mvn clean package` to build it.
-3. Optionally archive the `.jar` output.
-
----
-
-## 🧰 Prerequisites:
-
-Before you start:
-
-* Jenkins is installed and running on your system.
-* Jenkins has:
-
-  * ✅ **Maven** installed (Manage Jenkins → Global Tool Configuration)
-  * ✅ **JDK** installed (same page)
-  * ✅ Your project available either:
-
-    * Locally on the Jenkins machine
-    * Or in a Git repository (e.g., GitHub)
-
----
-
-## 🔧 Step-by-Step: Configure Jenkins Freestyle Job
-
-### ✅ Step 1: Create a New Job
-
-1. Open Jenkins.
-2. Click **"New Item"**.
-3. Enter a name, e.g., `hello-java-maven`.
-4. Select **Freestyle project**.
-5. Click **OK**.
-
----
-
-### 🔧 Step 2: Configure Source Code (if using Git)
-
-If your project is in GitHub or any Git repo:
-
-1. In the job config, go to **Source Code Management**.
-2. Select **Git**.
-3. Enter the Repository URL (e.g., `https://github.com/your-username/hello-java-maven.git`).
-4. Add credentials if needed.
-
----
-
-### ⚙️ Step 3: Configure Build Environment
-
-Scroll to **Build Environment**, and optionally check:
-
-* `Delete workspace before build starts` — useful for clean builds.
-
----
-
-### 🛠️ Step 4: Configure Build Step
-
-1. Scroll to **Build** section.
-2. Click **Add build step** → **Invoke top-level Maven targets**.
-3. Configure:
-
-   * **Goals**: `clean package`
-   * **POM**: Leave default (`pom.xml`)
-   * **Maven Version**: Select your configured Maven (from Global Tools)
-
----
-
-### 📦 Step 5: (Optional) Archive the JAR
-
-To save the `.jar` as a build artifact:
-
-1. Scroll to **Post-build Actions**.
-2. Click **Add post-build action** → **Archive the artifacts**.
-3. In **Files to archive**, put:
-
-```sh
-target/*.jar
-```
-
----
-
-### ✅ Step 6: Save and Run
-
-1. Click **Save**.
-
-2. On the job page, click **"Build Now"**.
-
-3. Watch the console output for success:
-
-   ```
-   [INFO] BUILD SUCCESS
-   ```
-
-4. If you enabled archiving, you can download the `.jar` from the **"Last Successful Artifacts"** section.
-
----
-
-## ✅ Result
-
-Your Jenkins Freestyle job will:
-
-* Pull or use your Maven project
-* Build it with `mvn clean package`
-* Create a `.jar` file
-* (Optionally) Archive it in Jenkins UI
-
----
-
-### 🧪 Want to Add Automated Testing?
-
-Let me know if you want to add:
-
-* Unit tests
-* Email notifications
-* GitHub integration
-* Docker container build
-* Deployment steps
-
-I'm happy to help configure those as well.
-=============
-Great question!
-
-You're asking how to run **both Maven build (`mvn clean package`)** and then immediately **run the built `.jar` file (`java -jar target\hello-1.0.jar`)** in a **Jenkins Freestyle job**.
-
-Let me guide you step-by-step.
-
----
-
-## ✅ Jenkins Freestyle: Run `mvn clean package` + `java -jar target\hello-1.0.jar`
-
-There are **two main ways** to do this in a Freestyle job:
-
----
-
-### ✅ **Option 1: Use “Execute Windows Batch Command”**
-
-1. In Jenkins, go to your Freestyle job config.
-2. Scroll to **Build** section.
-3. Click **“Add build step” → “Execute Windows batch command”**
-4. Paste this script:
-
-```bat
-mvn clean package
-java -jar target\hello-1.0.jar
-```
-
-> ✅ This works on **Windows agents**, since you're using Windows-style paths like `target\hello-1.0.jar`.
-
-5. Click **Save**.
-6. Click **“Build Now”**.
-
----
-
-### ✅ **Option 2: Use Maven Build Step + Batch Step**
-
-If you want more control or need to separate steps:
-
-#### 🔹 Step 1: Add **"Invoke top-level Maven targets"** build step
-
-* Goals: `clean package`
-
-#### 🔹 Step 2: Add **"Execute Windows batch command"** step:
-
-```bat
-java -jar target\hello-1.0.jar
-```
-
-> This assumes the build step above has successfully created the `.jar`.
-
-This way:
-
-* Jenkins runs `mvn clean package` first
-* Then executes the built `.jar` with `java -jar`
-
----
-
-### 📦 Optional: Archive the `.jar` file
-
-1. Go to **Post-build Actions** → **Archive the artifacts**
-2. Use:
-
-   ```
-   target\*.jar
-   ```
-
-So you can download the JAR after the job runs.
-
----
-
-## ✅ Final Result
-
-Your Freestyle job will:
-
-1. Run `mvn clean package` to build the JAR
-2. Immediately run the `.jar` file with `java -jar ...`
-3. (Optional) Archive the JAR
-
----
-
-Let me know if:
-
-* You're using **Linux agents** (commands change slightly)
-* You want to see the console output in Jenkins from your Java program
-* You want to automate input/output or logs
-
-I'm happy to help tailor this further.
